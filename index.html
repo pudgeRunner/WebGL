@@ -1,31 +1,247 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
-<title>PA#1</title>
-<style>
-    body {
-        background-color: #EEEEEE;
-    }
-</style>
+    <title>PA#3</title>
 
-<script src="./Utils/trackball-rotator.js"></script>
-<script src="./Utils/m4.js"></script>
-<script src="./shader.gpu"></script>
-<script src="./main.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="./Utils/trackball-rotator.js"></script>
+    <script src="./Utils/m4.js"></script>
+    <script src="./shader.gpu"></script>
+    <script src="./main.js"></script>
 
 </head>
+
 <body onload="init()">
 
-<h2>A Cube with "Trackball" Mouse Rotation</h2>
-
-<p id="message">Drag your mouse on the cube to rotate it.<br>
-(On a touch screen, you can use your finger.)</p>
+    <h2 class="m-3" style="text-align: center;">SGW</h2>
 
 
-<div id="canvas-holder">
-   <canvas width="600" height="600" id="webglcanvas" style="background-color:red"></canvas>
-</div>
+    <div class="container mt-5">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="me-5">
 
 
-</body></html>
+                    <div class="card mt-3" style="width: 18rem;" id="image_div">
+                        <img class="card-img-top">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <input class="form-control" type="file" id="texture_image" accept=".png, .jpg, .jpeg, .webp">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3" style="width: 18rem;" id="video_div">
+                        <video class="card-img-top" autoplay loop></video>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <input class="form-control" type="file" id="texture_video" accept=".mp4" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="col">
+                <div id="canvas-holder">
+                    <canvas class="rounded-3" width="580" height="580" id="webglcanvas" style="background-color: gray"></canvas>
+                </div>
+            </div>
+            <div class="col">
+                <div class="me-5">
+                    <div class="input-group mb-1">
+                        <span class="input-group-text">X</span>
+                        <input id="World_X" type="number" class="form-control h-auto d-inline-block" aria-describedby="World_X" value="-1" step="0.1">
+                    </div>
+                    <div class="input-group mb-1">
+                        <span class="input-group-text">Y</span>
+                        <input id="World_Y" type="number" class="form-control h-auto d-inline-block" aria-describedby="World_Y" value="0" step="0.1">
+                    </div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Z</span>
+                        <input id="World_Z" type="number" class="form-control h-auto d-inline-block" aria-describedby="World_Z" value="-10" step="0.1">
+                    </div>
+                    <div class="form-check ms-1 mb-3">
+                        <input class="form-check-input" type="checkbox" value="" id="LightParabolaCheck" onclick="Check();">
+                        <label class="form-check-label" for="LightParabolaCheck">
+                            Light path lineSeg animation
+                        </label>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Ambient Color</span>
+                        <input id="AmbientColor" type="color" class="form-control h-auto d-inline-block" aria-describedby="AmbientColor" value="#000000">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Diffuse Color</span>
+                        <input id="DiffuseColor" type="color" class="form-control h-auto d-inline-block" aria-describedby="DiffuseColor" value="#4249A9">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Specular Color</span>
+                        <input id="SpecularColor" type="color" class="form-control h-auto d-inline-block" aria-describedby="SpecularColor" value="#000000">
+                    </div>
+                    <label for="ScaleValue" class="form-label">Image Scale (or press +/-)</label>
+                    <span class="badge bg-primary" id="ScaleValue_text">1</span>
+                    <input type="range" class="form-range" min="0.5" max="2" step="0.05" id="ScaleValue" value="1">
+                    <label for="scale" class="form-label">Zoom (or turn the mouse wheel)</label>
+                    <span class="badge bg-primary" id="scale_text">1</span>
+                    <input type="range" class="form-range" min="0" max="2" step="0.125" id="scale" value="1">
+
+                    <label for="innerLimit" class="form-label">innerLimit</label>
+                    <span class="badge bg-primary" id="innerLimit_text">5</span>
+                    <input type="range" class="form-range" min="0" max="180" step="1" id="innerLimit" value="5">
+                    <label for="outerLimit" class="form-label">outerLimit</label>
+                    <span class="badge bg-primary" id="outerLimit_text">15</span>
+                    <input type="range" class="form-range" min="0" max="180" step="1" id="outerLimit" value="15"><img id='divOutput'>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    $('#video_div').hide();
+    document.querySelector("img").src = image_src;
+    $(document).ready(function() {
+        if (document.querySelector('input[name="flexRadioDefault"]')) {
+            document.querySelectorAll('input[name="flexRadioDefault"]').forEach((elem) => {
+                elem.addEventListener("change", function(event) {
+                    var item = event.target.value;
+                    if (item == "img") {
+                        texture_type = "image";
+                        $('#image_div').show();
+                        $('#video_div').hide();
+                        $('#image_div *').prop('disabled', false);
+                        $('#video_div *').prop('disabled', true);
+                        document.querySelector("img").src = image_src;
+                        document.querySelector("video").src = "";
+                        document.getElementById("texture_video").value = "";
+                        init();
+                    } else {
+                        texture_type = "video";
+                        $('#image_div').hide();
+                        $('#video_div').show();
+                        $('#image_div *').prop('disabled', true);
+                        $('#video_div *').prop('disabled', false);
+                        document.querySelector("video").src = video_src;
+                        document.querySelector("img").src = "";
+                        document.getElementById("texture_image").value = "";
+                        init();
+                    }
+                });
+            });
+        }
+    });
+
+    var input_x = document.getElementById("World_X");
+    var input_y = document.getElementById("World_Y");
+    var input_z = document.getElementById("World_Z");
+    var input_a = document.getElementById("AmbientColor");
+    var input_d = document.getElementById("DiffuseColor");
+    var input_s = document.getElementById("SpecularColor");
+    var input_sh = document.getElementById("ScaleValue");
+    var input_sc = document.getElementById("scale");
+    var input_iL = document.getElementById("innerLimit");
+    var input_oL = document.getElementById("outerLimit");
+
+    input_x.addEventListener("input", function() {
+        World_X = this.value;
+        draw();
+    }, false);
+
+    input_y.addEventListener("input", function() {
+        World_Y = this.value;
+        draw();
+    }, false);
+
+    input_z.addEventListener("input", function() {
+        World_Z = this.value;
+        draw();
+    }, false);
+
+
+    input_a.addEventListener("input", function() {
+        AmbientColor = [hexToRgb(this.value).r / 255, hexToRgb(this.value).g / 255, hexToRgb(this.value).b / 255];
+        draw();
+    }, false);
+
+    input_d.addEventListener("input", function() {
+        DiffuseColor = [hexToRgb(this.value).r / 255, hexToRgb(this.value).g / 255, hexToRgb(this.value).b / 255];
+        draw();
+    }, false);
+
+    input_s.addEventListener("input", function() {
+        SpecularColor = [hexToRgb(this.value).r / 255, hexToRgb(this.value).g / 255, hexToRgb(this.value).b / 255];
+        draw();
+    }, false);
+
+    input_sh.addEventListener("input", function() {
+        ScaleValue = this.value;
+        document.getElementById("ScaleValue_text").innerHTML = ScaleValue;
+        draw();
+    }, false);
+
+    input_sc.addEventListener("input", function() {
+        scale = this.value;
+        document.getElementById("scale_text").innerHTML = scale;
+        draw();
+    }, false);
+
+    input_iL.addEventListener("input", function() {
+        innerLimit = this.value;
+        document.getElementById("innerLimit_text").innerHTML = innerLimit;
+        draw();
+    }, false);
+
+    input_oL.addEventListener("input", function() {
+        outerLimit = this.value;
+        document.getElementById("outerLimit_text").innerHTML = outerLimit;
+        draw();
+    }, false);
+
+    function Check() {
+        if (document.getElementById('LightParabolaCheck').checked) {
+            flag = true;
+            DrawParabola_right();
+        } else {
+            flag = false;
+        }
+    }
+
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    document.getElementById("texture_image")
+        .onchange = function(event) {
+            let file = event.target.files[0];
+            let blobURL = URL.createObjectURL(file);
+            document.querySelector("img").src = blobURL;
+            image_src = blobURL;
+            init();
+        }
+
+    document.getElementById("texture_video")
+        .onchange = function(event) {
+            let file = event.target.files[0];
+            let blobURL = URL.createObjectURL(file);
+            document.querySelector("video").src = blobURL;
+            video_src = blobURL;
+            init();
+        }
+
+</script>
+
+</html>
