@@ -1,24 +1,58 @@
-
-
 // Vertex shader
 const vertexShaderSource = `
 attribute vec3 vertex;
+attribute vec3 normal;
+uniform mat4 WorldInverseTranspose;
 uniform mat4 ModelViewProjectionMatrix;
 
+uniform float u_innerLimit;
+uniform float u_outerLimit; 
+uniform vec3 ambientColor;
+uniform vec3 diffuseColor;
+uniform vec3 specularColor;
+uniform float shininess;
+
+uniform vec3 LightWorldPosition;
+
+varying vec4 color;
+
 void main() {
-    gl_Position = ModelViewProjectionMatrix * vec4(vertex,1.0);
+    vec4 vertexPosition4 = ModelViewProjectionMatrix * vec4(vertex, 1.0);
+    vec3 vertexPosition = vec3(vertexPosition4) / vertexPosition4.w;
+    vec3 normalInterpolation = mat3(WorldInverseTranspose) * normal;
+    gl_Position = vertexPosition4;
+    
+    vec3 normal = normalize(normalInterpolation);
+    vec3 lightDirection = normalize(LightWorldPosition - vertexPosition);
+    
+    float dotFromDirection = max(dot(normal, lightDirection), 0.0);
+    float specularLight = 0.0;
+    if (dotFromDirection > 0.0) {
+        vec3 viewDirection = normalize(-vertexPosition);
+        vec3 halfDirection = normalize(lightDirection + viewDirection);
+        float specularAngle = max(dot(halfDirection, normal), 0.0);
+        specularLight = pow(specularAngle, shininess);
+    }
+    
+    float inLight = smoothstep(u_outerLimit, u_innerLimit, dotFromDirection);
+    
+    vec3 diffuse = inLight * diffuseColor;
+    vec3 ambient = ambientColor;
+    vec3 specular = specularLight * specularColor;
+    color = vec4(diffuse + ambient + specular, 1.0);
 }`;
 
 
 // Fragment shader
 const fragmentShaderSource = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
-   precision highp float;
+    precision highp float;
 #else
-   precision mediump float;
+    precision mediump float;
 #endif
 
-uniform vec4 color;
+varying vec4 color;
+
 void main() {
     gl_FragColor = color;
 }`;
